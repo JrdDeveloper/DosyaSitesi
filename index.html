@@ -1,1 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dosya Galerisi</title>
+    <style>
+        /* Temel stil ayarları */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+        /* Dosya yükleme formu */
+        .upload-form {
+            text-align: center;
+            margin: 20px;
+        }
+        /* Dosya yükleme düğmesi */
+        .upload-button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        /* Dosya galerisi */
+        .file-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+        /* Dosya kartı */
+        .file-card {
+            width: 200px;
+            margin: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+        }
+        /* Dosya adı */
+        .file-name {
+            font-weight: bold;
+        }
+        /* Dosya ID */
+        .file-id {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #777;
+        }
+        /* İndirme düğmesi */
+        .download-button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        /* Silme düğmesi */
+        .delete-button {
+            background-color: #ff0000;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        /* Arama kutusu */
+        .search-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-form">
+        <input type="file" id="upload-input">
+        <button onclick="uploadFile()" class="upload-button">Dosya Yükle</button>
+    </div>
+    <div class="search-box">
+        <input type="text" id="search-input" class="search-input" placeholder="ID ile arama yap">
+    </div>
+
+    <div class="file-gallery" id="file-gallery">
+        <!-- Dosya galerisi -->
+    </div>
+
+    <script>
+        function generateRandomId() {
+            return Math.random().toString(36).substr(2, 8);
+        }
+
+        function uploadFile() {
+            var input = document.getElementById('upload-input');
+            var file = input.files[0];
+            var reader = new FileReader();
+
+            reader.onloadend = function () {
+                var fileId = generateRandomId();
+                var fileItem = {
+                    id: fileId,
+                    name: file.name,
+                    data: reader.result
+                };
+
+                var fileGallery = document.getElementById('file-gallery');
+                addFileCard(fileItem, fileGallery);
+
+                storeFile(fileItem);
+
+                input.value = ''; // Dosya yükleme alanını temizle
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function getStoredFiles() {
+            var files = localStorage.getItem('fileGalleryFiles');
+
+            if (files) {
+                return JSON.parse(files);
+            } else {
+                return [];
+            }
+        }
+
+        function storeFile(fileItem) {
+            var files = getStoredFiles();
+            files.push(fileItem);
+            localStorage.setItem('fileGalleryFiles', JSON.stringify(files));
+        }
+
+        function addFileCard(fileItem, fileGallery) {
+            var fileCard = document.createElement('div');
+            fileCard.classList.add('file-card');
+            fileCard.setAttribute('data-id', fileItem.id);
+
+            var fileName = document.createElement('p');
+            fileName.classList.add('file-name');
+            fileName.textContent = fileItem.name;
+
+            var fileId = document.createElement('p');
+            fileId.classList.add('file-id');
+            fileId.textContent = 'ID: ' + fileItem.id;
+
+            var downloadButton = document.createElement('button');
+            downloadButton.classList.add('download-button');
+            downloadButton.textContent = 'İndir';
+            downloadButton.addEventListener('click', function () {
+                downloadFile(fileItem);
+            });
+
+            var deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-button');
+            deleteButton.textContent = 'Sil';
+            deleteButton.addEventListener('click', function () {
+                deleteFile(fileItem, fileCard);
+            });
+
+            fileCard.appendChild(fileName);
+            fileCard.appendChild(fileId);
+            fileCard.appendChild(downloadButton);
+            fileCard.appendChild(deleteButton);
+
+            fileGallery.appendChild(fileCard);
+        }
+
+        function downloadFile(fileItem) {
+            var element = document.createElement('a');
+            element.setAttribute('href', fileItem.data);
+            element.setAttribute('download', fileItem.name);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+
+        function deleteFile(fileItem, fileCard) {
+            var files = getStoredFiles();
+            var updatedFiles = files.filter(function (file) {
+                return file.id !== fileItem.id;
+            });
+
+            localStorage.setItem('fileGalleryFiles', JSON.stringify(updatedFiles));
+
+            fileCard.remove();
+        }
+
+        function loadStoredFiles() {
+            var files = getStoredFiles();
+            var fileGallery = document.getElementById('file-gallery');
+            files.forEach(function (fileItem) {
+                addFileCard(fileItem, fileGallery);
+            });
+        }
+
+        loadStoredFiles();
+
+        var searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', searchFiles);
+    </script>
+</body>
+</html>
 
